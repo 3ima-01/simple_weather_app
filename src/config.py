@@ -6,8 +6,9 @@ class Settings(BaseSettings):
 
     REDIS_HOST: str
     REDIS_PORT: int
+    REDIS_PASSWORD: str
     REDIS_USER: str
-    REDIS_PASS: str
+    REDIS_USER_PASSWORD: str
 
     OPEN_WEATHER_BASE_URL: str
     OPEN_WEATHER_API_KEY: str
@@ -16,12 +17,8 @@ class Settings(BaseSettings):
 
     @property
     def rd(self):
-        return redis.Redis(
-            host=self.REDIS_HOST,
-            port=self.REDIS_PORT,
-            db=0,
-            username=self.REDIS_USER,
-            password=self.REDIS_PASS,
+        return redis.from_url(
+            f"redis://{self.REDIS_USER}:{self.REDIS_USER_PASSWORD}@{self.REDIS_HOST}:{self.REDIS_PORT}",
             decode_responses=True,
         )
 
