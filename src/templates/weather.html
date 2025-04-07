@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Погода в {{ data.name }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f8ff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .weather-card {
+            background-color: #ffffff;
+            border-radius: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 350px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .weather-card h1 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+
+        .temperature {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .weather-info p {
+            margin: 5px 0;
+            font-size: 1rem;
+        }
+
+        .details {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="weather-card">
+        {% if 'name' in data and 'sys' in data and 'country' in data.sys %}
+            <h1>{{ data.name }}, {{ data.sys.country }}</h1>
+        {% else %}
+            <h1>Неизвестное местоположение</h1>
+        {% endif %}
+
+        {% if 'weather' in data and data.weather and data.weather[0] %}
+            <img 
+                src="http://openweathermap.org/img/wn/{{ data.weather[0].icon|default('01d') }}@2x.png" 
+                alt="{{ data.weather[0].description|default('Нет описания') }}" 
+                class="icon"
+            >
+            <div class="temperature">{{ "%.1f"|format(data.main.temp|default(0)) }}°C</div>
+            <div class="weather-info">
+                {% if 'main' in data.weather[0] %}
+                    <p><strong>{{ data.weather[0].main }}</strong>: {{ data.weather[0].description|default('Нет описания') }}</p>
+                {% endif %}
+                {% if 'feels_like' in data.main %}
+                    <p>Ощущается как: {{ "%.1f"|format(data.main.feels_like|default(0)) }}°C</p>
+                {% endif %}
+                {% if 'humidity' in data.main %}
+                    <p>Влажность: {{ data.main.humidity }}%</p>
+                {% endif %}
+                {% if 'pressure' in data.main %}
+                    <p>Давление: {{ data.main.pressure }} гПа</p>
+                {% endif %}
+                {% if 'speed' in data.wind %}
+                    <p>Ветер: {{ data.wind.speed }} м/с, {{ data.wind.deg|default(0) }}°</p>
+                {% endif %}
+                {% if 'visibility' in data %}
+                    <p>Видимость: {{ (data.visibility // 1000)|default(0) }} км</p>
+                {% endif %}
+                {% if 'snow' in data and '1h' in data.snow %}
+                    <p>Снег: {{ data.snow['1h'] }} мм</p>
+                {% endif %}
+                {% if 'clouds' in data and 'all' in data.clouds %}
+                    <p>Облачность: {{ data.clouds.all }}%</p>
+                {% endif %}
+            </div>
+        {% endif %}
+
+        <div class="details">
+            {% if 'sys' in data and 'sunrise' in data.sys and 'sunset' in data.sys %}
+                <p>Восход: {{ data.sys.sunrise|datetime }}</p>
+                <p>Закат: {{ data.sys.sunset|datetime }}</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- JavaScript для фильтра времени -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const timestampToTime = (timestamp) => {
+                const date = new Date(timestamp * 1000);
+                return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            };
+
+            document.querySelectorAll('[data-timestamp]').forEach(el => {
+                el.textContent = timestampToTime(el.getAttribute('data-timestamp'));
+            });
+        });
+    </script>
+</body>
+</html>

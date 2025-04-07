@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Прогноз погоды для {{ data.city.name }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f4f8;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+        .city-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .city-header h1 {
+            margin: 0;
+            font-size: 2.5em;
+            color: #2c3e50;
+        }
+        .city-header p {
+            margin: 5px 0;
+            color: #7f8c8d;
+        }
+        .date-section {
+            margin-bottom: 30px;
+        }
+        .date-section h2 {
+            font-size: 1.8em;
+            color: #34495e;
+            margin: 0 0 15px;
+            text-align: center;
+        }
+        .forecast-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        .forecast-card {
+            background: #ecf0f1;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            transition: transform 0.2s;
+        }
+        .forecast-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        .forecast-card .time {
+            font-size: 1.1em;
+            color: #7f8c8d;
+            margin: 5px 0;
+        }
+        .weather-icon img {
+            width: 50px;
+            height: 50px;
+        }
+        .weather-details p {
+            margin: 5px 0;
+            font-size: 0.95em;
+        }
+        .weather-details .temp {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #e74c3c;
+        }
+        .weather-details .snow {
+            color: #3498db;
+            font-weight: bold;
+        }
+        @media (max-width: 600px) {
+            .forecast-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="city-header">
+            {% if 'city' in data and 'name' in data.city %}
+                <h1>{{ data.city.name }}</h1>
+            {% else %}
+                <h1>Неизвестный город</h1>
+            {% endif %}
+            {% if 'city' in data and 'country' in data.city %}
+                <p>Страна: {{ data.city.country }}{% if 'population' in data.city %} | Население: {{ data.city.population }}{% endif %}</p>
+            {% endif %}
+            {% if 'city' in data and 'coord' in data.city and 'lat' in data.city.coord and 'lon' in data.city.coord %}
+                <p>Координаты: Широта {{ data.city.coord.lat }}, Долгота {{ data.city.coord.lon }}</p>
+            {% endif %}
+        </div>
+
+        {% set ns = namespace(dates=[]) %}
+        {% for forecast in data.list %}
+            {% set current_date = forecast.dt_txt.split(' ')[0] %}
+            {% if current_date not in ns.dates %}
+                {% set _ = ns.dates.append(current_date) %}
+            {% endif %}
+        {% endfor %}
+
+        {% for date in ns.dates %}
+            <div class="date-section">
+                <h2>{{ date }}</h2>
+                <div class="forecast-grid">
+                    {% for forecast in data.list if forecast.dt_txt.split(' ')[0] == date %}
+                        <div class="forecast-card">
+                            <p class="time">{{ forecast.dt_txt.split(' ')[1] }}</p>
+                            {% if 'weather' in forecast and forecast.weather and forecast.weather[0] and 'icon' in forecast.weather[0] %}
+                                <div class="weather-icon">
+                                    <img src="http://openweathermap.org/img/wn/{{ forecast.weather[0].icon|default('01d') }}@2x.png" alt="{{ forecast.weather[0].description|default('No description') }}">
+                                </div>
+                            {% endif %}
+                            <div class="weather-details">
+                                {% if 'main' in forecast and 'temp' in forecast.main %}
+                                    <p class="temp">{{ "%.1f"|format(forecast.main.temp|default(0)) }}°C</p>
+                                {% endif %}
+                                {% if 'main' in forecast and 'feels_like' in forecast.main %}
+                                    <p>Ощущается как: {{ "%.1f"|format(forecast.main.feels_like|default(0)) }}°C</p>
+                                {% endif %}
+                                {% if 'weather' in forecast and forecast.weather and forecast.weather[0] and 'description' in forecast.weather[0] %}
+                                    <p>{{ forecast.weather[0].description|capitalize|default('No description') }}</p>
+                                {% endif %}
+                                {% if 'main' in forecast and 'humidity' in forecast.main %}
+                                    <p>Влажность: {{ forecast.main.humidity|default(0) }}%</p>
+                                {% endif %}
+                                {% if 'wind' in forecast and 'speed' in forecast.wind and 'deg' in forecast.wind %}
+                                    <p>Ветер: {{ forecast.wind.speed|default(0) }} м/с, {{ forecast.wind.deg|default(0) }}°</p>
+                                {% endif %}
+                                {% if 'snow' in forecast and '3h' in forecast.snow %}
+                                    <p class="snow">Снег: {{ forecast.snow['3h']|default(0) }} мм (3ч)</p>
+                                {% endif %}
+                                {% if 'main' in forecast and 'pressure' in forecast.main %}
+                                    <p>Давление: {{ forecast.main.pressure|default(0) }} гПа</p>
+                                {% endif %}
+                                {% if 'clouds' in forecast and 'all' in forecast.clouds %}
+                                    <p>Облачность: {{ forecast.clouds.all|default(0) }}%</p>
+                                {% endif %}
+                                {% if forecast.pop is defined and forecast.pop is number %}
+                                    <p>Вероятность осадков: {{ (forecast.pop * 100)|round|int }}%</p>
+                                {% endif %}
+                                {% if 'visibility' in forecast %}
+                                    <p>Видимость: {{ forecast.visibility|default(0) }} м</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</body>
+</html>
