@@ -19,7 +19,7 @@ async def get_weather_by_city(city: str):
 
 
 @weather_router.get("/forecast/{city}")
-async def get_weather_by_city(city: str):
+async def get_weather_forecast_by_city(city: str):
     city = city.lower()
     key = "forecast_" + city
     if settings.rd.get(key):
