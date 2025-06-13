@@ -5,13 +5,11 @@ from exceptions import InvalidToken
 
 
 class OpenWeatherClient:
-
     def __init__(self):
         self.URL = settings.OPEN_WEATHER_BASE_URL
         self.API_KEY = settings.OPEN_WEATHER_API_KEY
 
     def get_geo_by_city(self, city: str) -> list:
-
         key = "geo_" + city
 
         if settings.rd.get(key):
@@ -30,7 +28,7 @@ class OpenWeatherClient:
                 raise InvalidToken
 
             data = r.json()[0]
-            settings.rd.set(key, f"{data["lat"]},{data["lon"]}")
+            settings.rd.set(key, f"{data['lat']},{data['lon']}")
             return [data["lat"], data["lon"]]
 
     def get_current_weather_data(

@@ -1,8 +1,7 @@
-import redis
 from fastapi import APIRouter
 
-from open_weather import open_weather_client
 from config import settings
+from open_weather import open_weather_client
 
 weather_router = APIRouter(tags=["Weather"], prefix="/weather")
 
